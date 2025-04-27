@@ -2,6 +2,7 @@ import { db } from "@/lib/firebaseConfig";
 import { collection, getDocs, query, where } from "firebase/firestore";
 import Link from "next/link";
 import { UpdateViewCount } from "@/components/UpdateViewCount";
+import { PageProps } from "next"; // ✅ 追加！！！
 
 interface Article {
   title: string;
@@ -24,7 +25,7 @@ async function getArticle(slug: string) {
   return snapshot.docs[0].data() as Article;
 }
 
-// 動的ルーティングパラメータ生成
+// 動的パス生成
 export async function generateStaticParams() {
   const snapshot = await getDocs(collection(db, "articles"));
   return snapshot.docs.map((doc) => ({
@@ -32,10 +33,9 @@ export async function generateStaticParams() {
   }));
 }
 
-// ✅ 必ず "Page"という名前で export defaultする
-export default async function Page({ params }: { params: { slug: string } }) {
-  const { slug } = params;
-  const article = await getArticle(slug);
+// ✅ 正しくPagePropsを使う！
+export default async function Page({ params }: PageProps<{ slug: string }>) {
+  const article = await getArticle(params.slug);
 
   if (!article) {
     return <div className="p-8 text-center">記事が見つかりませんでした。</div>;
@@ -43,7 +43,7 @@ export default async function Page({ params }: { params: { slug: string } }) {
 
   return (
     <main className="flex flex-col items-center bg-white text-black">
-      <UpdateViewCount slug={slug} />
+      <UpdateViewCount slug={params.slug} />
       <section className="w-full bg-gray-100 py-10 text-center">
         <Link href="/">
           <h1 className="text-6xl font-bold">Crypto Go！</h1>
