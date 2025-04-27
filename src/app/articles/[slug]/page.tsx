@@ -1,10 +1,11 @@
+"use client"; // ❗必須！！
+
 import { db } from "@/lib/firebaseConfig";
 import { collection, getDocs, query, where } from "firebase/firestore";
 import Link from "next/link";
 import { UpdateViewCount } from "@/components/UpdateViewCount";
-
-// ❗❗ PageProps の import は完全に削除する！！
-// import { PageProps } from "next"; ← これNGです！
+import { useParams } from "next/navigation";
+import { useEffect, useState } from "react";
 
 interface Article {
   title: string;
@@ -26,16 +27,17 @@ async function getArticle(slug: string) {
   return snapshot.docs[0].data() as Article;
 }
 
-export async function generateStaticParams() {
-  const snapshot = await getDocs(collection(db, "articles"));
-  return snapshot.docs.map((doc) => ({
-    slug: doc.data().slug,
-  }));
-}
+// ✅ 必ず "use client" にして、クライアントコンポーネントにする！！
 
-// ✅ 正しい書き方
-export default async function Page({ params }: { params: { slug: string } }) {
-  const article = await getArticle(params.slug);
+export default function Page() {
+  const { slug } = useParams<{ slug: string }>();
+  const [article, setArticle] = useState<Article | null>(null);
+
+  useEffect(() => {
+    if (slug) {
+      getArticle(slug).then((data) => setArticle(data));
+    }
+  }, [slug]);
 
   if (!article) {
     return <div className="p-8 text-center">記事が見つかりませんでした。</div>;
@@ -43,7 +45,7 @@ export default async function Page({ params }: { params: { slug: string } }) {
 
   return (
     <main className="flex flex-col items-center bg-white text-black">
-      <UpdateViewCount slug={params.slug} />
+      <UpdateViewCount slug={slug} />
       <section className="w-full bg-gray-100 py-10 text-center">
         <Link href="/">
           <h1 className="text-6xl font-bold">Crypto Go！</h1>
