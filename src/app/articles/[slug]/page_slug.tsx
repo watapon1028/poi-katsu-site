@@ -13,7 +13,12 @@ interface Article {
   slug: string;
 }
 
-// Firestoreから記事取得
+// 🔥 ページのprops型を正しく定義！
+type PageProps = {
+  params: { slug: string };
+};
+
+// Firestoreから記事を取得
 async function getArticle(slug: string) {
   const q = query(collection(db, "articles"), where("slug", "==", slug));
   const snapshot = await getDocs(q);
@@ -24,7 +29,7 @@ async function getArticle(slug: string) {
   return snapshot.docs[0].data() as Article;
 }
 
-// 動的ルーティングパラメータ生成
+// 動的パスを生成
 export async function generateStaticParams() {
   const snapshot = await getDocs(collection(db, "articles"));
   return snapshot.docs.map((doc) => ({
@@ -32,8 +37,8 @@ export async function generateStaticParams() {
   }));
 }
 
-// ✅ 必ず "Page"という名前で export defaultする
-export default async function Page({ params }: { params: { slug: string } }) {
+// ✅ 正しいPageコンポーネント
+export default async function Page({ params }: PageProps) {
   const { slug } = params;
   const article = await getArticle(slug);
 
@@ -44,6 +49,7 @@ export default async function Page({ params }: { params: { slug: string } }) {
   return (
     <main className="flex flex-col items-center bg-white text-black">
       <UpdateViewCount slug={slug} />
+
       <section className="w-full bg-gray-100 py-10 text-center">
         <Link href="/">
           <h1 className="text-6xl font-bold">Crypto Go！</h1>
@@ -66,7 +72,7 @@ export default async function Page({ params }: { params: { slug: string } }) {
       </div>
 
       <footer className="w-full mt-20 p-8 border-t text-center text-sm text-gray-500">
-        <p>© 2025 Crypto Go！</p>
+        <p>© 2025 Crypto Go!</p>
         <div className="flex justify-center gap-4 mt-4">
           <a href="#">X</a>
           <a href="#">Instagram</a>
