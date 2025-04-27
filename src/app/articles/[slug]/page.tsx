@@ -1,22 +1,9 @@
-"use client"; // ❗必須！！
-
 import { db } from "@/lib/firebaseConfig";
 import { collection, getDocs, query, where } from "firebase/firestore";
 import Link from "next/link";
 import { UpdateViewCount } from "@/components/UpdateViewCount";
-import { useParams } from "next/navigation";
-import { useEffect, useState } from "react";
 
-interface Article {
-  title: string;
-  body: string;
-  category: string;
-  createdAt: string;
-  points: number;
-  totalViewCount: number;
-  slug: string;
-}
-
+// Firestoreから記事を取得
 async function getArticle(slug: string) {
   const q = query(collection(db, "articles"), where("slug", "==", slug));
   const snapshot = await getDocs(q);
@@ -24,20 +11,12 @@ async function getArticle(slug: string) {
   if (snapshot.empty) {
     return null;
   }
-  return snapshot.docs[0].data() as Article;
+  return snapshot.docs[0].data() as any;
 }
 
-// ✅ 必ず "use client" にして、クライアントコンポーネントにする！！
-
-export default function Page() {
-  const { slug } = useParams<{ slug: string }>();
-  const [article, setArticle] = useState<Article | null>(null);
-
-  useEffect(() => {
-    if (slug) {
-      getArticle(slug).then((data) => setArticle(data));
-    }
-  }, [slug]);
+// ✅ Promise形式のparamsを受け取る
+export default async function Page({ params }: { params: { slug: string } }) {
+  const article = await getArticle(params.slug);
 
   if (!article) {
     return <div className="p-8 text-center">記事が見つかりませんでした。</div>;
@@ -45,7 +24,7 @@ export default function Page() {
 
   return (
     <main className="flex flex-col items-center bg-white text-black">
-      <UpdateViewCount slug={slug} />
+      <UpdateViewCount slug={params.slug} />
       <section className="w-full bg-gray-100 py-10 text-center">
         <Link href="/">
           <h1 className="text-6xl font-bold">Crypto Go！</h1>
