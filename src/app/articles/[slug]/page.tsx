@@ -14,9 +14,9 @@ async function getArticle(slug: string) {
   return snapshot.docs[0].data() as any;
 }
 
-// ✅ Promise形式のparamsを受け取る
-export default async function Page({ params }: { params: { slug: string } }) {
-  const article = await getArticle(params.slug);
+export default async function Page({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params; // ← ここで**await params**する！！！
+  const article = await getArticle(slug);
 
   if (!article) {
     return <div className="p-8 text-center">記事が見つかりませんでした。</div>;
@@ -24,7 +24,7 @@ export default async function Page({ params }: { params: { slug: string } }) {
 
   return (
     <main className="flex flex-col items-center bg-white text-black">
-      <UpdateViewCount slug={params.slug} />
+      <UpdateViewCount slug={slug} />
       <section className="w-full bg-gray-100 py-10 text-center">
         <Link href="/">
           <h1 className="text-6xl font-bold">Crypto Go！</h1>
