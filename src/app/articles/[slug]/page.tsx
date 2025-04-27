@@ -2,7 +2,9 @@ import { db } from "@/lib/firebaseConfig";
 import { collection, getDocs, query, where } from "firebase/firestore";
 import Link from "next/link";
 import { UpdateViewCount } from "@/components/UpdateViewCount";
-import { PageProps } from "next"; // ✅ 追加！！！
+
+// ❗❗ PageProps の import は完全に削除する！！
+// import { PageProps } from "next"; ← これNGです！
 
 interface Article {
   title: string;
@@ -14,7 +16,6 @@ interface Article {
   slug: string;
 }
 
-// Firestoreから記事取得
 async function getArticle(slug: string) {
   const q = query(collection(db, "articles"), where("slug", "==", slug));
   const snapshot = await getDocs(q);
@@ -25,7 +26,6 @@ async function getArticle(slug: string) {
   return snapshot.docs[0].data() as Article;
 }
 
-// 動的パス生成
 export async function generateStaticParams() {
   const snapshot = await getDocs(collection(db, "articles"));
   return snapshot.docs.map((doc) => ({
@@ -33,8 +33,8 @@ export async function generateStaticParams() {
   }));
 }
 
-// ✅ 正しくPagePropsを使う！
-export default async function Page({ params }: PageProps<{ slug: string }>) {
+// ✅ 正しい書き方
+export default async function Page({ params }: { params: { slug: string } }) {
   const article = await getArticle(params.slug);
 
   if (!article) {
