@@ -9,7 +9,6 @@ import { UpdateViewCount } from "@/components/UpdateViewCount";
 export default async function ArticlePage({ params }: { params: { slug: string } }) {
   const q = query(collection(db, 'articles'), where('slug', '==', params.slug));
   const snapshot = await getDocs(q);
-  const { slug } = params;
 
   if (snapshot.empty) {
     return <div className="p-8 text-center">記事が見つかりませんでした。</div>;
