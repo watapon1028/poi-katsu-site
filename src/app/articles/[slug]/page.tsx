@@ -7,11 +7,16 @@ interface Article {
   title: string;
   body: string;
   category: string;
-  createdAt: string;
+  createdAt: any;
   points: number;
   totalViewCount: number;
   slug: string;
 }
+
+// 🔥 ページのprops型を正しく定義！
+type PageProps = {
+  params: { slug: string };
+};
 
 // Firestoreから記事を取得
 async function getArticle(slug: string) {
@@ -24,7 +29,7 @@ async function getArticle(slug: string) {
   return snapshot.docs[0].data() as Article;
 }
 
-// ✅ 重要！ generateStaticParamsはこれでOK！
+// 動的パスを生成
 export async function generateStaticParams() {
   const snapshot = await getDocs(collection(db, "articles"));
   return snapshot.docs.map((doc) => ({
@@ -32,9 +37,10 @@ export async function generateStaticParams() {
   }));
 }
 
-// ✅ ここをasync functionにする！！
-export default async function Page({ params }: { params: { slug: string } }) {
-  const article = await getArticle(params.slug);
+// ✅ 正しいPageコンポーネント
+export default async function Page({ params }: PageProps) {
+  const { slug } = params;
+  const article = await getArticle(slug);
 
   if (!article) {
     return <div className="p-8 text-center">記事が見つかりませんでした。</div>;
@@ -42,7 +48,7 @@ export default async function Page({ params }: { params: { slug: string } }) {
 
   return (
     <main className="flex flex-col items-center bg-white text-black">
-      <UpdateViewCount slug={params.slug} />
+      <UpdateViewCount slug={slug} />
 
       <section className="w-full bg-gray-100 py-10 text-center">
         <Link href="/">
