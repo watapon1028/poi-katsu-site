@@ -6,10 +6,6 @@ import Link from 'next/link';
 // import { updateViewCount } from "@/lib/updateViewCount"; // ※これも必ず
 import { UpdateViewCount } from "@/components/UpdateViewCount";
 
-type Props = {
-  params: { slug: string };
-};
-
 export default async function ArticlePage({ params }: { params: { slug: string } }) {
   const q = query(collection(db, 'articles'), where('slug', '==', params.slug));
   const snapshot = await getDocs(q);

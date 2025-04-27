@@ -1,6 +1,6 @@
 // src/lib/updateViewCount.ts
 import { db } from "@/lib/firebaseConfig";
-import { collection, query, where, getDocs, updateDoc, increment } from "firebase/firestore";
+import { collection, query, where, getDocs, updateDoc } from "firebase/firestore";
 
 export const updateViewCount = async (slug: string) => {
   try {
@@ -29,7 +29,7 @@ export const updateViewCount = async (slug: string) => {
     const yearlyUpdatedAt = articleData.yearlyViewCountUpdatedAt ?? currentYear;
 
     // 🛠 更新用オブジェクト作成
-    const updates: any = {
+    const updates: Record<string, any> = {
       totalViewCount: totalViewCount + 1, // 総合カウントは無条件+1
     };
 

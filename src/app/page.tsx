@@ -59,7 +59,7 @@ export default function HomePage() {
       <h2 className="text-2xl font-semibold text-center mb-8">人気情報</h2>
       <section className="flex flex-wrap justify-center gap-8 max-w-6xl px-4">
 
-        {sortedPopularArticles.slice(0, 3).map((article, index) => (
+        {sortedPopularArticles.slice(0, 3).map((article) => (
           <div
             key={article.id}
             className="w-[300px] p-6 rounded-lg border border-gray-300 shadow-md flex flex-col items-center"
