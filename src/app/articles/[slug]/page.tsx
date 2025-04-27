@@ -1,4 +1,3 @@
-// src/app/articles/[slug]/page.tsx
 import { db } from "@/lib/firebaseConfig";
 import { collection, getDocs, query, where } from "firebase/firestore";
 import Link from "next/link";
@@ -14,7 +13,7 @@ interface Article {
   slug: string;
 }
 
-// 記事データを取得する関数（非同期）
+// Firestoreから記事を取得
 async function getArticle(slug: string) {
   const q = query(collection(db, "articles"), where("slug", "==", slug));
   const snapshot = await getDocs(q);
@@ -22,30 +21,20 @@ async function getArticle(slug: string) {
   if (snapshot.empty) {
     return null;
   }
-  const data = snapshot.docs[0].data() as Article;
-  return data;
+  return snapshot.docs[0].data() as Article;
 }
 
-// 必要な動的ルートを定義する（これがないとダメ！）
+// ✅ 重要！ generateStaticParamsはこれでOK！
 export async function generateStaticParams() {
   const snapshot = await getDocs(collection(db, "articles"));
-  const slugs = snapshot.docs.map((doc) => ({
+  return snapshot.docs.map((doc) => ({
     slug: doc.data().slug,
   }));
-
-  return slugs;
 }
 
-// ✅ propsをPromiseでunwrapするように！
-export default function ArticlePage({ params }: { params: { slug: string } }) {
-  return (
-    <ArticleLoader slug={params.slug} />
-  );
-}
-
-// ✅ ページコンポーネントは分ける（非同期OK）
-async function ArticleLoader({ slug }: { slug: string }) {
-  const article = await getArticle(slug);
+// ✅ ここをasync functionにする！！
+export default async function Page({ params }: { params: { slug: string } }) {
+  const article = await getArticle(params.slug);
 
   if (!article) {
     return <div className="p-8 text-center">記事が見つかりませんでした。</div>;
@@ -53,7 +42,7 @@ async function ArticleLoader({ slug }: { slug: string }) {
 
   return (
     <main className="flex flex-col items-center bg-white text-black">
-      <UpdateViewCount slug={slug} />
+      <UpdateViewCount slug={params.slug} />
 
       <section className="w-full bg-gray-100 py-10 text-center">
         <Link href="/">
