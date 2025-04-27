@@ -29,7 +29,7 @@ export const updateViewCount = async (slug: string) => {
     const yearlyUpdatedAt = articleData.yearlyViewCountUpdatedAt ?? currentYear;
 
     // 🛠 更新用オブジェクト作成
-    const updates: Record<string, any> = {
+    const updates: Record<string, unknown> = {
       totalViewCount: totalViewCount + 1, // 総合カウントは無条件+1
     };
 
