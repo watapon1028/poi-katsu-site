@@ -1,25 +1,52 @@
-// src/app/articles/[slug]/page.tsx
-import { db } from '@/lib/firebaseConfig';
-import { collection, getDocs, query, where } from 'firebase/firestore';
-import Link from 'next/link';
+"use client";
+
+import { db } from "@/lib/firebaseConfig";
+import { collection, getDocs, query, where } from "firebase/firestore";
+import Link from "next/link";
 import { UpdateViewCount } from "@/components/UpdateViewCount";
 
-export default async function ArticlePage({ params }: { params: { slug: string } }) {
-  const { slug } = params; // ← props.params.slugからslug取り出す
-  const q = query(collection(db, 'articles'), where('slug', '==', slug));
+interface Article {
+  title: string;
+  body: string;
+  category: string;
+  createdAt: any;
+  points: number;
+  totalViewCount: number;
+  slug: string;
+}
+
+async function getArticle(slug: string) {
+  const q = query(collection(db, "articles"), where("slug", "==", slug));
   const snapshot = await getDocs(q);
 
   if (snapshot.empty) {
+    return null;
+  }
+  const data = snapshot.docs[0].data() as Article;
+  return data;
+}
+
+// 👇 ここで動的パス生成のための設定を追加
+export async function generateStaticParams() {
+  const snapshot = await getDocs(collection(db, "articles"));
+  const slugs = snapshot.docs.map((doc) => ({
+    slug: doc.data().slug,
+  }));
+
+  return slugs;
+}
+
+export default async function ArticlePage({ params }: { params: { slug: string } }) {
+  const article = await getArticle(params.slug);
+
+  if (!article) {
     return <div className="p-8 text-center">記事が見つかりませんでした。</div>;
   }
 
-  const article = snapshot.docs[0].data();
-
   return (
     <main className="flex flex-col items-center bg-white text-black">
-      {/* ビューカウント */}
-      <UpdateViewCount slug={slug} />
-      
+      <UpdateViewCount slug={params.slug} />
+
       <section className="w-full bg-gray-100 py-10 text-center">
         <Link href="/">
           <h1 className="text-6xl font-bold">Crypto Go！</h1>
