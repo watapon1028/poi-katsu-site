@@ -14,8 +14,8 @@ async function getArticle(slug: string) {
   return snapshot.docs[0].data() as any;
 }
 
-export default async function Page({ params }: { params: Promise<{ slug: string }> }) {
-  const { slug } = await params; // ← ここで**await params**する！！！
+export default async function Page({ params }: { params: { slug: string } }) {
+  const slug = params.slug; // ✅ awaitいらない
   const article = await getArticle(slug);
 
   if (!article) {
