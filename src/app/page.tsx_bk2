@@ -1,0 +1,56 @@
+// src/app/page.tsx
+export default function Home() {
+  return (
+    <main className="flex flex-col items-center p-4">
+      <header className="w-full max-w-5xl flex justify-between py-4">
+        <h1 className="text-4xl font-bold">Crypto Go！</h1>
+        <p className="text-lg text-gray-500">楽々クリプトライフ</p>
+      </header>
+
+      <section className="my-10 text-center">
+        <h2 className="text-2xl font-bold">人気記事</h2>
+        <div className="flex justify-center my-4 space-x-4">
+          <button className="px-4 py-2 border rounded">Monthly</button>
+          <button className="px-4 py-2 border rounded">Yearly</button>
+        </div>
+
+        <div className="flex justify-center space-x-4">
+          {["記事1", "記事2", "記事3"].map((title, index) => (
+            <div key={index} className="border rounded-lg p-4 w-60 shadow">
+              <h3 className="text-xl font-semibold">{title}</h3>
+              <p className="text-2xl my-2">$50/mo</p>
+              <ul className="text-left text-sm space-y-1">
+                <li>・List item</li>
+                <li>・List item</li>
+                <li>・List item</li>
+              </ul>
+              <button className="mt-4 w-full py-2 bg-black text-white rounded">
+                Button
+              </button>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section className="my-10 w-full max-w-3xl">
+        <h2 className="text-2xl font-bold text-center mb-4">最新情報</h2>
+        {[1, 2, 3, 4, 5].map((_, index) => (
+          <div key={index} className="border p-4 mb-2 rounded">
+            <h3 className="font-semibold">Title</h3>
+            <p className="text-sm text-gray-600">簡単な説明文がここに入ります。</p>
+          </div>
+        ))}
+      </section>
+
+      <footer className="w-full max-w-5xl py-10 border-t mt-10 text-center text-sm text-gray-500">
+        <p>© 2025 Crypto Go!</p>
+        <div className="flex justify-center space-x-4 mt-4">
+          <a href="#" className="hover:underline">X</a>
+          <a href="#" className="hover:underline">Instagram</a>
+          <a href="#" className="hover:underline">YouTube</a>
+          <a href="#" className="hover:underline">LinkedIn</a>
+        </div>
+      </footer>
+    </main>
+  );
+}

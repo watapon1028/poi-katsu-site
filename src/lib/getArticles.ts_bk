@@ -1,0 +1,22 @@
+// src/lib/getArticles.ts
+import { collection, getDocs, query, orderBy } from 'firebase/firestore';
+import { db } from './firebaseConfig';
+
+export type Article = {
+  id: string;
+  title: string;
+  description: string;
+  points: number;
+  category: string;
+  createdAt: string;
+};
+
+export async function getArticles(): Promise<Article[]> {
+  const q = query(collection(db, 'articles'), orderBy('createdAt', 'desc'));
+  const snapshot = await getDocs(q);
+
+  return snapshot.docs.map(doc => ({
+    id: doc.id,
+    ...(doc.data() as Omit<Article, 'id'>),
+  }));
+}

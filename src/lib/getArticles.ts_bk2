@@ -1,0 +1,40 @@
+// src/lib/getArticles.ts
+import { collection, getDocs, query, where, orderBy } from 'firebase/firestore';
+import { db } from './firebaseConfig';
+
+export type Article = {
+  id: string;
+  slug: string;
+  title: string;
+  description: string;
+  points: number;
+  category: string;
+  createdAt: string;
+  mode: 'monthly' | 'yearly';
+  imageUrl: string;
+};
+
+export async function getArticles(mode: 'monthly' | 'yearly'): Promise<Article[]> {
+  const q = query(
+    collection(db, 'articles'),
+    where('mode', '==', mode),
+    orderBy('createdAt', 'desc')
+  );
+
+  const snapshot = await getDocs(q);
+
+  return snapshot.docs.map(doc => {
+    const data = doc.data();
+    return {
+      id: doc.id,
+      slug: data.slug,
+      title: data.title,
+      description: data.description,
+      points: data.points,
+      category: data.category,
+      createdAt: data.createdAt?.toDate().toISOString() || '',
+      mode: data.mode,
+      imageUrl: data.imageUrl
+    };
+  });
+}

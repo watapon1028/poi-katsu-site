@@ -1,0 +1,34 @@
+// src/app/page.tsx
+'use client';
+
+import { useEffect, useState } from 'react';
+import { getArticles, Article } from '../lib/getArticles';
+
+export default function Home() {
+  const [articles, setArticles] = useState<Article[]>([]);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      const data = await getArticles();
+      setArticles(data);
+    };
+    fetchData();
+  }, []);
+
+  return (
+    <main style={{ padding: '2rem' }}>
+      <h1>案件一覧</h1>
+      <ul>
+        {articles.map(article => (
+          <li key={article.id}>
+            <h2>{article.title}</h2>
+            <p>{article.description}</p>
+            <p>カテゴリ: {article.category}</p>
+            <p>ポイント: {article.points}pt</p>
+            <hr />
+          </li>
+        ))}
+      </ul>
+    </main>
+  );
+}
