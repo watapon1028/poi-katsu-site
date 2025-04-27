@@ -9,7 +9,7 @@ interface Article {
   title: string;
   body: string;
   category: string;
-  createdAt: any;
+  createdAt: string;
   points: number;
   totalViewCount: number;
   slug: string;
