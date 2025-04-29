@@ -2,6 +2,19 @@ import { db } from "@/lib/firebaseConfig";
 import { collection, getDocs, query, where } from "firebase/firestore";
 import Link from "next/link";
 import { UpdateViewCount } from "@/components/UpdateViewCount";
+import { Metadata } from "next";
+
+export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
+  return {
+    title: `${params.slug}｜Crypto Go！`,
+    description: `${params.slug}の詳細ページです。`
+  };
+}
+
+export async function generateStaticParams() {
+  // 必要ならここで全slug一覧取得するコードを書く
+  return [];
+}
 
 async function getArticle(slug: string) {
   const q = query(collection(db, "articles"), where("slug", "==", slug));
@@ -13,9 +26,9 @@ async function getArticle(slug: string) {
   return snapshot.docs[0].data() as any;
 }
 
+// ✅ Promise対応の正しいparams受け取り
 export default async function Page({ params }: { params: { slug: string } }) {
   const slug = params.slug;
-
   const article = await getArticle(slug);
 
   if (!article) {
