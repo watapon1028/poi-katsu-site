@@ -1,10 +1,10 @@
-'use client'; // ← これ忘れず最上部に追加！
+// 'use client' は削除してください！
 
 import { db } from "@/lib/firebaseConfig";
 import { collection, getDocs, query, where } from "firebase/firestore";
 import Link from "next/link";
-import { UpdateViewCount } from "@/components/UpdateViewCount";
 import { Metadata } from "next";
+import { UpdateViewCount } from "@/components/UpdateViewCount"; // ← これはクライアントコンポーネントなので注意
 
 export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
   return {
@@ -13,15 +13,13 @@ export async function generateMetadata({ params }: { params: { slug: string } })
   };
 }
 
-// ここは問題ない
 export async function generateStaticParams() {
   return [];
 }
 
-// 🔥ここ重要
-// "params" をPromise形式でunwrapして受け取る（Next.js15の新ルール）
-export default async function Page({ params }: { params: Promise<{ slug: string }> }) {
-  const { slug } = await params; // Promiseだからawaitする！
+// "params"はPromiseじゃない！ { params: { slug: string } }で受け取ってOK
+export default async function Page({ params }: { params: { slug: string } }) {
+  const { slug } = params;
 
   const article = await getArticle(slug);
 
@@ -31,6 +29,7 @@ export default async function Page({ params }: { params: Promise<{ slug: string 
 
   return (
     <main className="flex flex-col items-center bg-white text-black">
+      {/* UpdateViewCountは別ファイルで"use client"宣言したクライアントコンポーネント */}
       <UpdateViewCount slug={slug} />
       <section className="w-full bg-gray-100 py-10 text-center">
         <Link href="/">
