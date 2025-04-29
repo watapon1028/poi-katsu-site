@@ -1,3 +1,5 @@
+'use client'; // ← これ忘れず最上部に追加！
+
 import { db } from "@/lib/firebaseConfig";
 import { collection, getDocs, query, where } from "firebase/firestore";
 import Link from "next/link";
@@ -11,24 +13,16 @@ export async function generateMetadata({ params }: { params: { slug: string } })
   };
 }
 
+// ここは問題ない
 export async function generateStaticParams() {
-  // 必要ならここで全slug一覧取得するコードを書く
   return [];
 }
 
-async function getArticle(slug: string) {
-  const q = query(collection(db, "articles"), where("slug", "==", slug));
-  const snapshot = await getDocs(q);
+// 🔥ここ重要
+// "params" をPromise形式でunwrapして受け取る（Next.js15の新ルール）
+export default async function Page({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params; // Promiseだからawaitする！
 
-  if (snapshot.empty) {
-    return null;
-  }
-  return snapshot.docs[0].data() as any;
-}
-
-// ✅ Promise対応の正しいparams受け取り
-export default async function Page({ params }: { params: { slug: string } }) {
-  const slug = params.slug;
   const article = await getArticle(slug);
 
   if (!article) {
@@ -70,4 +64,14 @@ export default async function Page({ params }: { params: { slug: string } }) {
       </footer>
     </main>
   );
+}
+
+async function getArticle(slug: string) {
+  const q = query(collection(db, "articles"), where("slug", "==", slug));
+  const snapshot = await getDocs(q);
+
+  if (snapshot.empty) {
+    return null;
+  }
+  return snapshot.docs[0].data() as any;
 }
