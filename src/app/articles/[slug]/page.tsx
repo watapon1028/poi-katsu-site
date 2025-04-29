@@ -1,76 +1,92 @@
-// 'use client' は削除してください！
+// src/app/articles/[slug]/page.tsx
 
+"use client";
+
+import { collection, query, where, getDocs } from "firebase/firestore";
 import { db } from "@/lib/firebaseConfig";
-import { collection, getDocs, query, where } from "firebase/firestore";
-import Link from "next/link";
-import { Metadata } from "next";
-import { UpdateViewCount } from "@/components/UpdateViewCount"; // ← これはクライアントコンポーネントなので注意
+import UpdateViewCount from "@/components/UpdateViewCount";
+import { notFound } from "next/navigation";
 
-export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
-  return {
-    title: `${params.slug}｜Crypto Go！`,
-    description: `${params.slug}の詳細ページです。`
+import type { Metadata } from "next";
+
+// Firestoreの記事型を定義
+interface Article {
+  id?: string;
+  slug: string;
+  title: string;
+  body: string;
+  category: string;
+  createdAt: {
+    toDate: () => Date;
   };
+  points?: number;
+  totalViewCount?: number;
+  monthlyViewCount?: number;
+  yearlyViewCount?: number;
 }
 
-export async function generateStaticParams() {
-  return [];
-}
-
-// "params"はPromiseじゃない！ { params: { slug: string } }で受け取ってOK
-export default async function Page({ params }: { params: { slug: string } }) {
-  const { slug } = params;
-
-  const article = await getArticle(slug);
-
-  if (!article) {
-    return <div className="p-8 text-center">記事が見つかりませんでした。</div>;
-  }
-
-  return (
-    <main className="flex flex-col items-center bg-white text-black">
-      {/* UpdateViewCountは別ファイルで"use client"宣言したクライアントコンポーネント */}
-      <UpdateViewCount slug={slug} />
-      <section className="w-full bg-gray-100 py-10 text-center">
-        <Link href="/">
-          <h1 className="text-6xl font-bold">Crypto Go！</h1>
-          <p className="text-2xl text-gray-500 mt-4">楽々クリプトライフ</p>
-        </Link>
-      </section>
-
-      <h1 className="text-4xl font-bold mb-4 mt-16">{article.title}</h1>
-      <p className="text-sm text-gray-500 mb-4">
-        {article.createdAt?.toDate().toLocaleDateString()} | カテゴリ: {article.category} | {article.totalViewCount ?? 0} Views
-      </p>
-
-      <div
-        className="prose prose-lg"
-        dangerouslySetInnerHTML={{ __html: article.body }}
-      />
-
-      <div className="mt-6 p-4 border-t text-sm text-gray-500">
-        ポイント獲得：{article.points} pt
-      </div>
-
-      <footer className="w-full mt-20 p-8 border-t text-center text-sm text-gray-500">
-        <p>© 2025 Crypto Go！</p>
-        <div className="flex justify-center gap-4 mt-4">
-          <a href="#">X</a>
-          <a href="#">Instagram</a>
-          <a href="#">YouTube</a>
-          <a href="#">LinkedIn</a>
-        </div>
-      </footer>
-    </main>
-  );
-}
-
-async function getArticle(slug: string) {
+// 記事データを取得する関数
+async function getArticle(slug: string): Promise<Article | null> {
   const q = query(collection(db, "articles"), where("slug", "==", slug));
   const snapshot = await getDocs(q);
 
   if (snapshot.empty) {
     return null;
   }
-  return snapshot.docs[0].data() as any;
+
+  const data = snapshot.docs[0].data() as Article;
+  return data;
+}
+
+// メインコンポーネント
+export default async function ArticlePage({ params }: { params: { slug: string } }) {
+  const { slug } = params;
+  const article = await getArticle(slug);
+
+  if (!article) {
+    notFound();
+  }
+
+  return (
+    <main className="flex flex-col items-center bg-white text-black">
+      {/* ヒーローセクション */}
+      <section className="w-full bg-gray-100 py-10 text-center">
+        <a href="/" className="text-6xl font-bold hover:underline">Crypto Go！</a>
+        <p className="text-2xl text-gray-500 mt-4">楽々クリプトライフ</p>
+      </section>
+
+      {/* 記事タイトルとメタ情報 */}
+      <h1 className="text-4xl font-bold mb-4 mt-16">{article.title}</h1>
+      <p className="text-sm text-gray-500 mb-4">
+        {article.createdAt?.toDate().toLocaleDateString()} | カテゴリ: {article.category}
+      </p>
+
+      {/* 閲覧数カウント */}
+      <UpdateViewCount slug={slug} />
+
+      {/* 記事本文 */}
+      <section className="max-w-4xl w-full px-6">
+        <div
+          className="prose prose-lg max-w-none"
+          dangerouslySetInnerHTML={{ __html: article.body }}
+        ></div>
+      </section>
+    </main>
+  );
+}
+
+// 動的メタデータ（SEO向け）
+export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
+  const article = await getArticle(params.slug);
+
+  if (!article) {
+    return {
+      title: "記事が見つかりませんでした",
+    };
+  }
+
+  return {
+    title: article.title,
+    description: article.body.substring(0, 100),
+  };
 }
