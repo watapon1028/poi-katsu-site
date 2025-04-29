@@ -1,15 +1,11 @@
-// src/app/articles/[slug]/page.tsx
-
-"use client";
-
+import { use } from 'react'; // ⭐追加！
 import { collection, query, where, getDocs } from "firebase/firestore";
 import { db } from "@/lib/firebaseConfig";
-import UpdateViewCount from "@/components/UpdateViewCount";
+import { UpdateViewCount } from "@/components/UpdateViewCount";
 import { notFound } from "next/navigation";
-
 import type { Metadata } from "next";
+import Link from "next/link";
 
-// Firestoreの記事型を定義
 interface Article {
   id?: string;
   slug: string;
@@ -25,7 +21,6 @@ interface Article {
   yearlyViewCount?: number;
 }
 
-// 記事データを取得する関数
 async function getArticle(slug: string): Promise<Article | null> {
   const q = query(collection(db, "articles"), where("slug", "==", slug));
   const snapshot = await getDocs(q);
@@ -38,10 +33,12 @@ async function getArticle(slug: string): Promise<Article | null> {
   return data;
 }
 
-// メインコンポーネント
-export default async function ArticlePage({ params }: { params: { slug: string } }) {
-  const { slug } = params;
-  const article = await getArticle(slug);
+// 🛠 ここが重要！paramsは Promise なので use() で解決する
+export default function ArticlePage({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = use(params);  // ⭐ use(params) でPromiseを同期的に展開！
+
+  const articlePromise = getArticle(slug);
+  const article = use(articlePromise); // ⭐ 記事も use()で同期的に取得！
 
   if (!article) {
     notFound();
@@ -49,22 +46,22 @@ export default async function ArticlePage({ params }: { params: { slug: string }
 
   return (
     <main className="flex flex-col items-center bg-white text-black">
-      {/* ヒーローセクション */}
       <section className="w-full bg-gray-100 py-10 text-center">
-        <a href="/" className="text-6xl font-bold hover:underline">Crypto Go！</a>
+      <Link href="/" className="text-6xl font-bold hover:underline">
+        Crypto Go！
+      </Link>
         <p className="text-2xl text-gray-500 mt-4">楽々クリプトライフ</p>
       </section>
 
-      {/* 記事タイトルとメタ情報 */}
       <h1 className="text-4xl font-bold mb-4 mt-16">{article.title}</h1>
       <p className="text-sm text-gray-500 mb-4">
         {article.createdAt?.toDate().toLocaleDateString()} | カテゴリ: {article.category}
       </p>
 
-      {/* 閲覧数カウント */}
-      <UpdateViewCount slug={slug} />
+      <div className="mb-8">
+        <UpdateViewCount slug={slug} />
+      </div>
 
-      {/* 記事本文 */}
       <section className="max-w-4xl w-full px-6">
         <div
           className="prose prose-lg max-w-none"
@@ -75,9 +72,10 @@ export default async function ArticlePage({ params }: { params: { slug: string }
   );
 }
 
-// 動的メタデータ（SEO向け）
-export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
-  const article = await getArticle(params.slug);
+// 🛠 generateMetadataも Promiseベースになったのでparamsをawaitする
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+  const { slug } = await params;
+  const article = await getArticle(slug);
 
   if (!article) {
     return {

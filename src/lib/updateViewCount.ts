@@ -1,52 +1,56 @@
-// src/lib/updateViewCount.ts
-import { db } from "@/lib/firebaseConfig";
-import { collection, query, where, getDocs, updateDoc } from "firebase/firestore";
+import { getFirestore, doc, getDoc, updateDoc, increment } from "firebase/firestore";
+import { app } from "@/lib/firebaseConfig";
 
-export const updateViewCount = async (slug: string) => {
+const db = getFirestore(app);
+
+export async function updateViewCount(slug: string) {
   try {
-    const articlesRef = collection(db, "articles");
-    const q = query(articlesRef, where("slug", "==", slug));
-    const querySnapshot = await getDocs(q);
+    const docRef = doc(db, "articles", slug);
+    const articleSnap = await getDoc(docRef);
 
-    if (querySnapshot.empty) {
-      console.error(`No article found with slug: ${slug}`);
+    if (!articleSnap.exists()) {
+      console.error("No article found with slug:", slug);
       return;
     }
 
-    const docRef = querySnapshot.docs[0].ref;
-    const articleData = querySnapshot.docs[0].data();
-
-    // 📅 今日の年月取得
+    const articleData = articleSnap.data();
     const now = new Date();
-    const currentMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`; // "2025-04"
-    const currentYear = `${now.getFullYear()}`; // "2025"
+    const nowMonth = now.getMonth() + 1; // 月は0始まりなので+1
+    const nowYear = now.getFullYear();
 
-    // 📈 初期値処理（Firestore上になければ仮に0扱い）
-    const totalViewCount = articleData.totalViewCount ?? 0;
-    const monthlyViewCount = articleData.monthlyViewCount ?? 0;
-    const yearlyViewCount = articleData.yearlyViewCount ?? 0;
-    const monthlyUpdatedAt = articleData.monthlyViewCountUpdatedAt ?? currentMonth;
-    const yearlyUpdatedAt = articleData.yearlyViewCountUpdatedAt ?? currentYear;
+    let monthlyReset = false;
+    let yearlyReset = false;
 
-    // 🛠 更新用オブジェクト作成
-    const updates: Record<string, unknown> = {
-      totalViewCount: totalViewCount + 1, // 総合カウントは無条件+1
-    };
-
-    // 月間カウント処理
-    if (monthlyUpdatedAt === currentMonth) {
-      updates.monthlyViewCount = monthlyViewCount + 1;
+    // createdAtがあれば、それと比較
+    if (articleData?.updatedAtMonth !== undefined && articleData?.updatedAtYear !== undefined) {
+      if (articleData.updatedAtMonth !== nowMonth) {
+        monthlyReset = true;
+      }
+      if (articleData.updatedAtYear !== nowYear) {
+        yearlyReset = true;
+      }
     } else {
-      updates.monthlyViewCount = 1;
-      updates.monthlyViewCountUpdatedAt = currentMonth;
+      // 初めての場合、月リセット・年リセット両方対象にする
+      monthlyReset = true;
+      yearlyReset = true;
     }
 
-    // 年間カウント処理
-    if (yearlyUpdatedAt === currentYear) {
-      updates.yearlyViewCount = yearlyViewCount + 1;
+    const updates: { [field: string]: import("firebase/firestore").FieldValue | number } = {
+      viewCount: increment(1),
+      updatedAtMonth: nowMonth,
+      updatedAtYear: nowYear,
+    };
+
+    if (monthlyReset) {
+      updates.monthlyViewCount = 1;
     } else {
+      updates.monthlyViewCount = increment(1);
+    }
+
+    if (yearlyReset) {
       updates.yearlyViewCount = 1;
-      updates.yearlyViewCountUpdatedAt = currentYear;
+    } else {
+      updates.yearlyViewCount = increment(1);
     }
 
     await updateDoc(docRef, updates);
@@ -54,4 +58,4 @@ export const updateViewCount = async (slug: string) => {
   } catch (error) {
     console.error("View count update error:", error);
   }
-};
+}

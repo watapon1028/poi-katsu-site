@@ -4,6 +4,7 @@
 import React, { useState, useEffect } from "react";
 import { getArticles, Article } from "@/lib/getArticles";
 import Link from "next/link";
+import Image from 'next/image';
 
 export default function HomePage() {
   const [viewMode, setViewMode] = useState<'monthly' | 'yearly'>('monthly');
@@ -12,12 +13,16 @@ export default function HomePage() {
 
   // 人気情報データ（初回だけ）
   useEffect(() => {
-    getArticles().then(setArticlesPopular);
+    getArticles().then((data) => {
+      setArticlesPopular(data as Article[]);
+    });
   }, []);
 
   // 最新情報データ（初回だけ）
   useEffect(() => {
-    getArticles().then(setArticlesLatest);
+    getArticles().then((data) => {
+      setArticlesLatest(data as Article[]);
+    });
   }, []);
 
   // 並び替え処理
@@ -101,10 +106,10 @@ export default function HomePage() {
               <div className="flex flex-col md:flex-row items-center border rounded-lg overflow-hidden hover:shadow-md transition">
                 {/* サムネイル */}
                 {article.imageUrl && (
-                  <img 
+                  <Image 
                     src={article.imageUrl}
                     alt={article.title}
-                    className="w-full md:w-40 h-40 object-cover"
+                    width={500} height={300} 
                   />
                 )}
                 
@@ -112,7 +117,8 @@ export default function HomePage() {
                 <div className="p-4 flex-1">
                   <div className="text-xs text-gray-400 mb-1">
                     {/*{article.category}・{new Date(article.createdAt).toLocaleDateString()}*/}
-                    {article.category}・{article.createdAt?.toDate().toLocaleDateString()}
+                    {article.category}・{new Date(article.createdAt).toLocaleDateString()}
+
                   </div>
                   <h3 className="text-lg font-semibold mb-2">{article.title}</h3>
                   <p className="text-sm text-gray-600 line-clamp-3">{article.description}</p>
