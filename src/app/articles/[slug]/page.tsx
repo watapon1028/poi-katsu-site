@@ -3,7 +3,6 @@ import { collection, getDocs, query, where } from "firebase/firestore";
 import Link from "next/link";
 import { UpdateViewCount } from "@/components/UpdateViewCount";
 
-// Firestoreから記事を取得
 async function getArticle(slug: string) {
   const q = query(collection(db, "articles"), where("slug", "==", slug));
   const snapshot = await getDocs(q);
@@ -14,8 +13,10 @@ async function getArticle(slug: string) {
   return snapshot.docs[0].data() as any;
 }
 
+// ✅ Promiseじゃないバージョンにする！
 export default async function Page({ params }: { params: { slug: string } }) {
-  const slug = params.slug; // ✅ awaitいらない
+  const slug = params.slug; // ←ここawaitなし！
+
   const article = await getArticle(slug);
 
   if (!article) {
