@@ -68,6 +68,17 @@ export default function ArticlePage({ params }: { params: Promise<{ slug: string
           dangerouslySetInnerHTML={{ __html: article.body }}
         ></div>
       </section>
+
+      {/* Footer */}
+      <footer className="w-full mt-20 p-8 border-t text-center text-sm text-gray-500">
+        <p>© 2025 Crypto Go!</p>
+        <div className="flex justify-center gap-4 mt-4">
+          <a href="#">X</a>
+          <a href="#">Instagram</a>
+          <a href="#">YouTube</a>
+          <a href="#">LinkedIn</a>
+        </div>
+      </footer>
     </main>
   );
 }
