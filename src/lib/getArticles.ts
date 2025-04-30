@@ -1,40 +1,41 @@
-import { collection, query, orderBy, getDocs } from "firebase/firestore";
+import { getDocs, collection } from "firebase/firestore";
 import { db } from "@/lib/firebaseConfig";
 
-// 記事データ型
-export interface Article {
-    id: string;
-    slug: string;
-    title: string;
-    description: string;
-    points: number;
-    category: string;
-    createdAt: string;
-    imageUrl: string;
-    viewCount: number;
-    totalViewCount: number;
-    monthlyViewCount: number;
-    monthlyViewCountUpdatedAt: string;
-    yearlyViewCount: number;
-    yearlyViewCountUpdatedAt: string;
-}
-
-const now = new Date();
-const currentYear = now.getFullYear();
-const currentMonth = String(now.getMonth() + 1).padStart(2, "0");
-const monthlyKey = `monthlyViewCount_${currentYear}_${currentMonth}`;
-const yearlyKey = `yearlyViewCount_${currentYear}`;
+export type Article = {
+  id: string;
+  slug: string;
+  title: string;
+  description: string;
+  points: number;
+  imageUrl: string;
+  category: string;
+  createdAt: string | null;
+  monthlyViewCount: number;
+  yearlyViewCount: number;
+  totalViewCount: number;
+};
 
 export async function getArticles() {
-    const q = query(collection(db, "articles"), orderBy("createdAt", "desc"));
-    const snapshot = await getDocs(q);
+    const snapshot = await getDocs(collection(db, "articles"));
   
-    const articles = snapshot.docs.map((doc) => {
+    const now = new Date();
+    const currentYear = now.getFullYear();
+    const currentMonth = now.getMonth() + 1;
+    const monthlyKey = `monthlyViewCount_${currentYear}_${currentMonth}`;
+    const yearlyKey = `yearlyViewCount_${currentYear}`;
+  
+    const articles: Article[] = snapshot.docs.map((doc) => {
       const data = doc.data();
   
       return {
         id: doc.id,
-        ...data,
+        slug: data.slug ?? "",
+        title: data.title ?? "",
+        description: data.description ?? "",
+        points: data.points ?? 0,
+        imageUrl: data.imageUrl ?? "",
+        category: data.category ?? "",
+        createdAt: data.createdAt?.toDate().toISOString() ?? null,
         monthlyViewCount: data[monthlyKey] ?? 0,
         yearlyViewCount: data[yearlyKey] ?? 0,
         totalViewCount: data.totalViewCount ?? 0,
@@ -42,4 +43,4 @@ export async function getArticles() {
     });
   
     return articles;
-  }
+  }  
