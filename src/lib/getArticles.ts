@@ -1,4 +1,4 @@
-import { collection, query, orderBy, limit, getDocs } from "firebase/firestore";
+import { collection, query, orderBy, getDocs } from "firebase/firestore";
 import { db } from "@/lib/firebaseConfig";
 
 // 記事データ型
@@ -19,17 +19,27 @@ export interface Article {
     yearlyViewCountUpdatedAt: string;
 }
 
-export const getArticles = async () => {
-    const articlesRef = collection(db, "articles");
-    const q = query(
-        articlesRef,
-        orderBy("createdAt", "desc"),
-        limit(50) // ← 多めに取っておく（50件とか）
-    );
+const now = new Date();
+const currentYear = now.getFullYear();
+const currentMonth = String(now.getMonth() + 1).padStart(2, "0");
+const monthlyKey = `monthlyViewCount_${currentYear}_${currentMonth}`;
+const yearlyKey = `yearlyViewCount_${currentYear}`;
+
+export async function getArticles() {
+    const q = query(collection(db, "articles"), orderBy("createdAt", "desc"));
+    const snapshot = await getDocs(q);
   
-    const querySnapshot = await getDocs(q);
-    return querySnapshot.docs.map((doc) => ({
-      id: doc.id,
-      ...doc.data(),
-    }));
-  };
+    const articles = snapshot.docs.map((doc) => {
+      const data = doc.data();
+  
+      return {
+        id: doc.id,
+        ...data,
+        monthlyViewCount: data[monthlyKey] ?? 0,
+        yearlyViewCount: data[yearlyKey] ?? 0,
+        totalViewCount: data.totalViewCount ?? 0,
+      };
+    });
+  
+    return articles;
+  }
