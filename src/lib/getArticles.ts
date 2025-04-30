@@ -1,4 +1,4 @@
-import { getDocs, collection } from "firebase/firestore";
+import { collection, getDocs, orderBy, query } from "firebase/firestore";
 import { db } from "@/lib/firebaseConfig";
 
 export type Article = {
@@ -16,7 +16,10 @@ export type Article = {
 };
 
 export async function getArticles() {
-    const snapshot = await getDocs(collection(db, "articles"));
+    const articlesRef = collection(db, "articles");
+    const q = query(articlesRef, orderBy("createdAt", "desc")); // ← ★ここが重要
+
+    const snapshot = await getDocs(q);
   
     const now = new Date();
     const currentYear = now.getFullYear();
